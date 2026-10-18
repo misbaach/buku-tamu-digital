@@ -7,5 +7,7 @@ minimumReleaseAge: 10080
 
 # Hanya paket ini yang boleh menjalankan skrip install.
 onlyBuiltDependencies:
+  - esbuild
   - lefthook
   - supabase
+  - workerd

@@ -1,0 +1,12 @@
+# Dokumen ditulis tangan (tabel lebar); format dijaga manual.
+*.md
+# SQL tidak diformat Prettier.
+supabase/
+pnpm-lock.yaml
+packages/shared/src/database.types.ts
+**/build/
+**/.svelte-kit/
+**/.wrangler/
+**/test-results/
+**/playwright-report/
+.tools/

@@ -4,7 +4,7 @@
 |---|---|
 | Acuan | `prd.md` **v0.5** (sumber kebenaran) |
 | Lingkup sesi | M0, M1, M2 (sisi server + dashboard), M3, simulator check-in |
-| Status | **Rencana disetujui.** Menunggu konfirmasi Docker Desktop + WSL2 terpasang untuk memulai M0. |
+| Status | **M0 selesai** (lihat `docs/progress.md`); menunggu konfirmasi sebelum M1. |
 | Tanggal | 18 Oktober 2026 |
 
 Semua keputusan yang mengubah perilaku ada di `prd.md` v0.5. Dokumen ini hanya berisi cara mengerjakannya: urutan kerja, struktur teknis, arah UI/UX, dan bukti test.

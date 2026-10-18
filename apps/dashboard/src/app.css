@@ -1,0 +1,72 @@
+@import 'tailwindcss';
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+@import '@fontsource/ibm-plex-mono/latin-500.css';
+
+/*
+  Token desain (docs/plan.md 13.3). Palet bawaan Tailwind dikosongkan agar hanya warna di bawah yang bisa
+  dipakai: satu warna aksi (tinta), warna status selalu disertai teks/ikon, tema terang kontras tinggi.
+*/
+@theme {
+  --color-*: initial;
+  --color-bg: #ffffff;
+  --color-surface: #f6f6f4;
+  --color-surface-2: #ededea;
+  --color-ink: #121212;
+  --color-ink-muted: #52524e;
+  --color-line: #dadad5;
+  --color-line-strong: #7a7a74;
+  --color-primary: #121212;
+  --color-on-primary: #ffffff;
+  --color-focus: #1a56db;
+  --color-ok: #146c2e;
+  --color-ok-bg: #e7f3ea;
+  --color-warn: #8a4b00;
+  --color-warn-bg: #fdf1dc;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fcebea;
+  --color-info: #1f4fb8;
+  --color-info-bg: #e9effb;
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-control: 4px;
+  --radius-dialog: 6px;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Cincin fokus selalu terlihat untuk navigasi keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0ms !important;
+      transition-duration: 0ms !important;
+    }
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
