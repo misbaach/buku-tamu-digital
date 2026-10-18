@@ -9,6 +9,8 @@
 
 /** Ukuran maksimal file impor tamu. FR-G-03 (Asumsi) */
 export const IMPORT_MAX_FILE_BYTES = 5 * 1024 * 1024;
+/** Baris maksimal per impor; sama dengan skala tamu per acara. (Asumsi-teknis) */
+export const IMPORT_MAX_ROWS = 5000;
 
 // --- Login usher (FR-R-02, FR-R-09) -------------------------------------------------------------
 
@@ -113,4 +115,5 @@ export const DB_MIRRORED_CONFIG = {
   snapshot_page_size: SNAPSHOT_PAGE_SIZE,
   sync_cursor_overlap_ms: SYNC_CURSOR_OVERLAP_MS,
   upload_max_bytes: UPLOAD_MAX_BYTES,
+  import_max_rows: IMPORT_MAX_ROWS,
 } as const;

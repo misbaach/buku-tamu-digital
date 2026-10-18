@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLButtonAttributes } from 'svelte/elements';
 
-  type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
+  type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'danger-ghost';
 
   interface Props extends HTMLButtonAttributes {
     variant?: Variant;
@@ -30,6 +30,7 @@
     secondary: 'border border-line-strong bg-bg text-ink hover:bg-surface',
     danger: 'bg-danger text-on-primary hover:bg-danger/90',
     ghost: 'text-ink hover:bg-surface-2',
+    'danger-ghost': 'text-danger hover:bg-danger-bg',
   };
   const sizes = { sm: 'h-8 px-3 text-sm', md: 'h-10 px-4 text-[0.9375rem]' };
 </script>

@@ -4,7 +4,7 @@
 |---|---|
 | Acuan | `prd.md` **v0.5** (sumber kebenaran) |
 | Lingkup sesi | M0, M1, M2 (sisi server + dashboard), M3, simulator check-in |
-| Status | **M0 selesai** (lihat `docs/progress.md`); menunggu konfirmasi sebelum M1. |
+| Status | **M0 dan M1 selesai** (lihat `docs/progress.md`); menunggu konfirmasi sebelum M2. |
 | Tanggal | 18 Oktober 2026 |
 
 Semua keputusan yang mengubah perilaku ada di `prd.md` v0.5. Dokumen ini hanya berisi cara mengerjakannya: urutan kerja, struktur teknis, arah UI/UX, dan bukti test.
@@ -80,7 +80,7 @@ Semua keputusan yang mengubah perilaku ada di `prd.md` v0.5. Dokumen ini hanya b
 .
 ├─ apps/
 │  └─ dashboard/                 SvelteKit SPA (adapter-static) → Cloudflare Pages
-│     ├─ src/lib/ui/             komponen dasar (turunan shadcn-svelte di atas bits-ui)
+│     ├─ src/lib/ui/             komponen dasar (elemen native `<dialog>`/`<select>`, T-037)
 │     ├─ src/lib/features/       events, guests, import, numbering, ushers, greeting, stats, history
 │     ├─ src/lib/supabase.ts     klien bertipe Database (publishable key saja)
 │     ├─ src/routes/             lihat 13.6
@@ -128,7 +128,7 @@ URL dan kunci Supabase lokal tidak pernah ditulis ke file yang di-commit. Skrip 
 |---|---|
 | Mode render dashboard | SPA (`adapter-static`, fallback `index.html`) |
 | CSP | `kit.csp` mode `hash` + `static/_headers` (`frame-ancestors 'none'`, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=()`). `connect-src` hanya `'self'` + domain project Supabase. Tanpa `unsafe-eval` |
-| Komponen UI | Tailwind CSS v4 + bits-ui (pola copy-paste shadcn-svelte), di-restyle memakai token sendiri |
+| Komponen UI | Tailwind CSS v4 dengan token sendiri; dialog dan pilihan memakai elemen native (T-037) |
 | Ikon | `@lucide/svelte`; VVIP `Crown`, VIP `Star`, penanda tinjauan `TriangleAlert` |
 | Validasi | Zod 4 di `packages/shared`; Edge Function memakai salinan hasil generate di `_shared`, diperiksa tes `tests/repo` |
 | Hash PIN | `extensions.crypt(rahasia, extensions.gen_salt('bf', 10))`; hash dummy dengan biaya yang sama disimpan di `private.config()` |
@@ -186,10 +186,10 @@ Semua RPC Admin berada di schema `public`, dengan `REVOKE … FROM public, anon`
 | Fungsi | Kegunaan | FR | Audit |
 |---|---|---|---|
 | `admin_create_event` / `admin_update_event` / `admin_archive_event` | Buat (dengan Kode Acara), ubah, arsipkan. Arsip mengakhiri semua sesi usher | FR-R-10 | arsip |
-| `admin_bulk_update_guests`, `admin_import_guests`, `admin_check_special_numbers` | Edit massal, impor, cek nomor di Tinjau Tamu | FR-G-03, G-05, C-02 | impor |
+| `admin_import_guests`, `admin_check_special_numbers` (edit kategori/grup massal lewat `update` + RLS, T-038) | Impor, cek nomor di Tinjau Tamu | FR-G-03, G-05, C-02 | impor |
 | `admin_preview_special_numbers` / `admin_apply_special_numbers` / `admin_clear_special_numbers` | Terapkan dan hapus Nomor Urut | FR-C-04, C-05 | ya |
 | `admin_manual_check_in(guest, pax)` | Tandai hadir manual (lihat 10.4) | FR-A-02 | ya |
-| `admin_update_check_in`, `admin_void_check_in`, `admin_check_out` | Ubah detail, undo, check-out manual | FR-A-02, RW-03, RW-04 | ya |
+| `admin_update_check_in` (termasuk check-out, T-047), `admin_void_check_in` | Ubah detail dan check-out manual, undo | FR-A-02, RW-03, RW-04 | ya |
 | `admin_review_check_in` | Tandai `duplicate`/`conflict` sudah ditinjau | FR-RW-05 | ya |
 | `admin_decide_quarantine(ids[] \| device_id, decision, reason?)` | Setujui atau tolak, per baris maupun per perangkat | FR-RW-05 | ya |
 | `admin_create_usher` → `{usher, pin: 'AB-XXXX-XXXX'}` | ID usher + rahasia dibuat server; PIN dikembalikan sekali | FR-R-01, R-02 | ya |

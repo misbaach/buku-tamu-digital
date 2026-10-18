@@ -36,7 +36,10 @@
         {#each items as item (item.message)}
           <li>
             {#if item.fieldId}
-              <a href="#{item.fieldId}" class="underline underline-offset-2">{item.message}</a>
+              <!-- min-h-6: target sentuh minimal 24px (WCAG 2.2, 2.5.8) karena tautan bertumpuk rapat. -->
+              <a href="#{item.fieldId}" class="inline-flex min-h-6 items-center underline underline-offset-2"
+                >{item.message}</a
+              >
             {:else}
               {item.message}
             {/if}

@@ -3,6 +3,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { supabase } from '$lib/supabase';
+  import Toaster from '$lib/ui/Toaster.svelte';
 
   let { children } = $props();
 
@@ -17,3 +18,4 @@
 </script>
 
 {@render children()}
+<Toaster />

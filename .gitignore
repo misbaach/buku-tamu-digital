@@ -26,3 +26,6 @@ blob-report/
 # OS dan editor
 .DS_Store
 Thumbs.db
+
+# Sesi Playwright tersimpan (berisi token login lokal)
+apps/dashboard/e2e/.auth/

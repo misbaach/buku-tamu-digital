@@ -11,7 +11,7 @@
     "gitleaks": "node scripts/gitleaks.mjs",
     "secrets:scan": "node scripts/gitleaks.mjs git --redact --no-banner",
     "typecheck": "tsc -p packages/shared && tsc -p tests",
-    "test:unit": "vitest run --project shared --project repo",
+    "test:unit": "vitest run --project shared --project repo --project dashboard",
     "test:integration": "vitest run --project integration",
     "db:start": "supabase start",
     "db:stop": "supabase stop",

@@ -12,6 +12,17 @@ export function formatEventDate(isoDate: string): string {
   return dateFormat.format(new Date(y, m - 1, d));
 }
 
+const dateTimeFormat = new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+export function formatDateTime(iso: string): string {
+  return dateTimeFormat.format(new Date(iso));
+}
+
 const numberFormat = new Intl.NumberFormat('id-ID');
 
 export function formatNumber(n: number): string {

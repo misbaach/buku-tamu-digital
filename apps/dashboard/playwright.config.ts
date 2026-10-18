@@ -6,6 +6,9 @@ const edge = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const channel =
   process.env.PW_CHANNEL ??
   (!process.env.CI && process.platform === 'win32' && existsSync(edge) ? 'msedge' : undefined);
+const browser = { ...devices['Desktop Chrome'], ...(channel ? { channel } : {}) };
+
+export const ADMIN_STATE = 'e2e/.auth/admin.json';
 
 export default defineConfig({
   testDir: 'e2e',
@@ -19,9 +22,19 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:8788',
     locale: 'id-ID',
     trace: 'retain-on-failure',
-    ...(channel ? { channel } : {}),
   },
-  projects: [{ name: 'desktop', use: { ...devices['Desktop Chrome'], ...(channel ? { channel } : {}) } }],
+  projects: [
+    // Login Admin sekali, sesinya dipakai ulang (batas login GoTrue: 30 per 5 menit per IP).
+    { name: 'setup', testMatch: /auth\.setup\.ts/, use: browser },
+    // Alur masuk/keluar dan header diuji tanpa sesi tersimpan.
+    { name: 'public', testMatch: /(auth|headers)\.spec\.ts/, use: browser },
+    {
+      name: 'admin',
+      testIgnore: /(auth|headers)\.spec\.ts|auth\.setup\.ts/,
+      dependencies: ['setup'],
+      use: { ...browser, storageState: ADMIN_STATE },
+    },
+  ],
   webServer: {
     command: 'pnpm build && pnpm preview:pages',
     url: 'http://127.0.0.1:8788/masuk',

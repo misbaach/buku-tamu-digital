@@ -308,7 +308,38 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "admin_apply_special_numbers":
+{ Args: { "p_category": Database["public"]['Enums']["guest_category"],"p_event_id": string,"p_expected_hash": string,"p_order": string,"p_overwrite": boolean }; Returns: number
+                           },
+"admin_archive_event":
+{ Args: { "p_event_id": string }; Returns: undefined
+                           },
+"admin_check_special_numbers":
+{ Args: { "p_event_id": string,"p_numbers": (string)[] }; Returns: {
+              "guest_name": string,"special_number": string
+            }[]
+                           },
+"admin_clear_special_numbers":
+{ Args: { "p_event_id": string,"p_guest_ids": (string)[] }; Returns: number
+                           },
+"admin_create_event":
+{ Args: { "p_couple_names"?: string,"p_event_date": string,"p_name": string,"p_timezone"?: string,"p_venue"?: string }; Returns: string
+                           },
+"admin_import_guests":
+{ Args: { "p_event_id": string,"p_rows": Json }; Returns: Json
+                           },
+"admin_manual_check_in":
+{ Args: { "p_actual_pax": number,"p_guest_id": string }; Returns: Json
+                           },
+"admin_preview_special_numbers":
+{ Args: { "p_category": Database["public"]['Enums']["guest_category"],"p_event_id": string,"p_order": string,"p_overwrite"?: boolean }; Returns: Json
+                           },
+"admin_update_check_in":
+{ Args: { "p_check_in_id": string,"p_patch": Json,"p_reason"?: string }; Returns: Json
+                           },
+"admin_update_event":
+{ Args: { "p_event_id": string,"p_patch": Json }; Returns: undefined
+                           }
           }
           Enums: {
             "attendance_status": "not_arrived"|"checked_in"|"checked_out","auth_attempt_kind": "usher_login"|"invitation_url"|"screen_token","check_in_source": "device"|"admin"|"outbox_upload","check_in_status": "accepted"|"repeat"|"duplicate"|"conflict"|"quarantined","guest_category": "regular"|"vip"|"vvip","login_method": "pin"|"qr","quarantine_reason": "device_revoked"|"session_expired","revoke_mode": "quarantine"|"terminate","rsvp_status": "going"|"not_going"|"unconfirmed","usher_mode": "check_in"|"check_out"

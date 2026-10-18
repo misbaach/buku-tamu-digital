@@ -2,8 +2,11 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
 
+  // Pesan 404 dari error() kita sendiri (mis. "Acara tidak ditemukan.") aman ditampilkan; galat tak terduga tidak.
   const message = $derived(
-    page.status === 404 ? 'Halaman tidak ditemukan.' : 'Terjadi kesalahan. Muat ulang halaman, lalu coba lagi.',
+    page.status === 404
+      ? (page.error?.message ?? 'Halaman tidak ditemukan.')
+      : 'Terjadi kesalahan. Muat ulang halaman, lalu coba lagi.',
   );
 </script>
 
