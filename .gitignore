@@ -1,0 +1,28 @@
+# Rahasia: tidak pernah di-commit. Satu-satunya pengecualian adalah templat placeholder.
+.env*
+!.env.example
+
+# Supabase CLI (state lokal)
+supabase/.temp/
+supabase/.branches/
+
+# Alat lokal yang diunduh skrip (mis. binary gitleaks)
+.tools/
+
+# Dependensi dan hasil build
+node_modules/
+.pnpm-store/
+.svelte-kit/
+build/
+dist/
+.wrangler/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+*.tsbuildinfo
+*.log
+
+# OS dan editor
+.DS_Store
+Thumbs.db

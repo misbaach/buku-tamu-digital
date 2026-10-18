@@ -1,0 +1,11 @@
+title = "buku-tamu-digital"
+
+# Pakai semua aturan bawaan gitleaks; allowlist ditambah hanya bila ada temuan palsu yang terbukti.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Berkas yang memang berisi hash/ID publik, bukan rahasia"
+paths = [
+  '''(^|/)pnpm-lock\.yaml$''',
+]

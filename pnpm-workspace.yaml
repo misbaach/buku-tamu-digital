@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Paket yang baru terbit < 7 hari tidak dipakai (mitigasi serangan rantai pasok).
+minimumReleaseAge: 10080
+
+# Hanya paket ini yang boleh menjalankan skrip install.
+onlyBuiltDependencies:
+  - lefthook
+  - supabase

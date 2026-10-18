@@ -1,0 +1,5 @@
+# Hook git dikelola lefthook (devDependency, versi dipin). Dipasang oleh `pnpm install` lewat skrip `prepare`.
+pre-commit:
+  jobs:
+    - name: gitleaks
+      run: node scripts/gitleaks.mjs git --pre-commit --staged --redact --no-banner
