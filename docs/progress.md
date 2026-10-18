@@ -85,6 +85,14 @@ Setelah dipulihkan, semua kembali lulus.
 3. Kaspersky Anti-Virus mencegat TLS ke `cdn.playwright.dev`. Playwright lokal memakai Edge sistem (T-034); verifikasi TLS tidak dimatikan.
 4. Node 25 di mesin ini sudah EOL. Proyek memakai Node 24 LTS lewat pnpm tanpa mengubah Node sistem (T-026). Disarankan memasang Node 24 LTS di sistem bila memungkinkan.
 
+### Perbaikan setelah uji lokal oleh pemilik produk
+
+- **Bug:** `scripts/local-supabase-env.mjs` mewajibkan `FUNCTIONS_URL` dan `STUDIO_URL`. Bila edge runtime sedang berhenti (mis. tidak ikut hidup lagi setelah Docker di-restart), `pnpm test:integration`, `test:e2e`, dan `dev` gagal semua.
+  - **Perbaikan:** hanya `API_URL`, `PUBLISHABLE_KEY`, dan `DB_URL` yang wajib; pesan galatnya menyarankan `pnpm db:stop` lalu `pnpm db:start`.
+  - **Verifikasi:** dengan edge runtime dalam keadaan mati, tes integrasi 52 lulus, E2E 18 lulus, dan `dev` menyajikan `/masuk` (HTTP 200).
+- **Bug kedua di wrapper yang sama:** di Windows, argumen berisi spasi atau `|` terpecah oleh `cmd.exe`. Sekarang argumen di-quote dan dikirim sebagai satu perintah.
+- **Catatan untuk M2:** Edge Function butuh edge runtime yang hidup. Bila `supabase status` menyebut `edge_runtime` di "Stopped services", jalankan `pnpm db:stop` lalu `pnpm db:start`.
+
 ### Cara menjalankan dan menguji secara lokal
 
 Prasyarat: Docker Desktop berjalan. Setelah memasang Docker, **restart VS Code/terminal** agar perintah `docker` masuk PATH. Semua perintah dijalankan dari folder repo.

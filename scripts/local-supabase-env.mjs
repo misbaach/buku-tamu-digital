@@ -7,7 +7,10 @@ import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const ALLOWED = ['API_URL', 'PUBLISHABLE_KEY', 'DB_URL', 'FUNCTIONS_URL', 'STUDIO_URL'];
+// Hanya ini yang wajib. FUNCTIONS_URL/STUDIO_URL tidak muncul bila layanannya sedang berhenti
+// (mis. edge runtime belum hidup lagi setelah Docker di-restart), dan M0 tidak membutuhkannya.
+const REQUIRED = ['API_URL', 'PUBLISHABLE_KEY', 'DB_URL'];
+const OPTIONAL = ['FUNCTIONS_URL', 'STUDIO_URL'];
 
 function withDockerOnPath(env) {
   // Docker Desktop di Windows kadang belum ada di PATH sesi yang sudah terbuka sebelum Docker dipasang.
@@ -19,7 +22,7 @@ function withDockerOnPath(env) {
   return env;
 }
 
-/** @returns {{ API_URL: string, PUBLISHABLE_KEY: string, DB_URL: string, FUNCTIONS_URL: string, STUDIO_URL: string }} */
+/** @returns {{ API_URL: string, PUBLISHABLE_KEY: string, DB_URL: string, FUNCTIONS_URL?: string, STUDIO_URL?: string }} */
 export function localSupabaseEnv() {
   const cli = createRequire(join(root, 'package.json')).resolve('supabase/dist/supabase.js');
   let out;
@@ -36,9 +39,15 @@ export function localSupabaseEnv() {
   const env = {};
   for (const line of out.split(/\r?\n/)) {
     const m = /^([A-Z_]+)="?(.*?)"?$/.exec(line.trim());
-    if (m && ALLOWED.includes(m[1])) env[m[1]] = m[2];
+    if (m && (REQUIRED.includes(m[1]) || OPTIONAL.includes(m[1]))) env[m[1]] = m[2];
   }
-  for (const k of ALLOWED) if (!env[k]) throw new Error(`supabase status tidak mengembalikan ${k}`);
+  for (const k of REQUIRED) {
+    if (!env[k]) {
+      throw new Error(
+        `supabase status tidak mengembalikan ${k}. Coba hidupkan ulang Supabase lokal: \`pnpm db:stop\` lalu \`pnpm db:start\`.`,
+      );
+    }
+  }
   return env;
 }
 
@@ -53,10 +62,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   const env = localSupabaseEnv();
   const { spawnSync } = await import('node:child_process');
-  const r = spawnSync(cmd[0], cmd.slice(1), {
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-    env: { ...process.env, PUBLIC_SUPABASE_URL: env.API_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY: env.PUBLISHABLE_KEY },
-  });
+  const childEnv = {
+    ...process.env,
+    PUBLIC_SUPABASE_URL: env.API_URL,
+    PUBLIC_SUPABASE_PUBLISHABLE_KEY: env.PUBLISHABLE_KEY,
+  };
+  // Di Windows, shim .cmd (vite, playwright, pnpm) hanya bisa dijalankan lewat shell. Argumen di-quote agar
+  // spasi dan karakter khusus cmd (| & < > ^) tidak memecah perintah.
+  const quote = (a) => (/[\s"&|<>^()]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a);
+  const r =
+    process.platform === 'win32'
+      ? spawnSync(cmd.map(quote).join(' '), { stdio: 'inherit', shell: true, env: childEnv })
+      : spawnSync(cmd[0], cmd.slice(1), { stdio: 'inherit', env: childEnv });
   process.exit(r.status ?? 1);
 }
