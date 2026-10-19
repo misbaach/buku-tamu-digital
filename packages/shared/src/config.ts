@@ -33,8 +33,15 @@ export const USHER_LOGIN_WINDOW_MIN = 15;
 /** Durasi minimal respons login gagal agar waktunya seragam. (Asumsi-teknis) */
 export const USHER_LOGIN_FAIL_MIN_MS = 500;
 
+/** Biaya bcrypt rahasia PIN (±50–100 ms per verifikasi di server). (Asumsi-teknis) */
+export const PIN_BCRYPT_COST = 10;
+
 /** Masa berlaku QR Login. FR-R-02 */
 export const QR_LOGIN_TTL_SEC = 300;
+/** Panjang acak token QR Login dalam byte (256 bit). FR-R-02 */
+export const USHER_LOGIN_QR_TOKEN_BYTES = 32;
+/** Domain email sintetis user Auth perangkat. `.invalid` dicadangkan RFC 2606, tidak pernah menerima email. */
+export const DEVICE_EMAIL_DOMAIN = 'device.buku-tamu.invalid';
 
 // --- Sesi dan perangkat usher (FR-R-08, FR-R-10, FR-C-06) ----------------------------------------
 
@@ -81,6 +88,29 @@ export const STATS_POLL_FALLBACK_MS = 10_000;
 
 export const UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
 export const UPLOAD_MIME = ['image/png', 'image/jpeg', 'image/webp'] as const;
+/** Bucket privat foto pop-up sapaan. Path: `{event_id}/{kategori}/{uuid}.{ext}`. FR-P-01 */
+export const GREETING_PHOTO_BUCKET = 'greeting-photos';
+/** Masa berlaku signed URL pratinjau foto di dashboard. (Asumsi-teknis) */
+export const SIGNED_URL_TTL_SEC = 300;
+
+// --- Pengaturan check-in dan sapaan (FR-R-03, FR-R-04, FR-P-01) ---------------------------------
+
+/** Informasi yang bisa dipilih untuk tiket penomoran. "Kode hadiah" menyusul bersama fitur Hadiah (P1). */
+export const PRINT_TICKET_FIELDS = [
+  'event_name',
+  'couple_names',
+  'event_date',
+  'guest_name',
+  'category',
+  'group_name',
+  'ticket_number',
+  'pax',
+  'checked_in_at',
+] as const;
+export const PRINT_TICKET_MAX_COPIES = 3;
+export const GREETING_TITLE_MAX = 80;
+export const GREETING_BODY_MAX = 300;
+export const GREETING_LAYOUTS = ['text', 'photo_wide', 'photo_round'] as const;
 
 // --- Skala dan infrastruktur (10.2, 11.1) -------------------------------------------------------
 
@@ -116,4 +146,13 @@ export const DB_MIRRORED_CONFIG = {
   sync_cursor_overlap_ms: SYNC_CURSOR_OVERLAP_MS,
   upload_max_bytes: UPLOAD_MAX_BYTES,
   import_max_rows: IMPORT_MAX_ROWS,
+  pin_bcrypt_cost: PIN_BCRYPT_COST,
+  usher_login_qr_token_bytes: USHER_LOGIN_QR_TOKEN_BYTES,
+  upload_mime: UPLOAD_MIME,
+  greeting_photo_bucket: GREETING_PHOTO_BUCKET,
+  print_ticket_fields: PRINT_TICKET_FIELDS,
+  print_ticket_max_copies: PRINT_TICKET_MAX_COPIES,
+  greeting_title_max: GREETING_TITLE_MAX,
+  greeting_body_max: GREETING_BODY_MAX,
+  greeting_layouts: GREETING_LAYOUTS,
 } as const;

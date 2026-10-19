@@ -1,6 +1,162 @@
 # Progres
 
-## M1 — Admin inti · selesai, menunggu konfirmasi
+## M2 — Usher: sisi server dan dashboard · selesai, menunggu konfirmasi
+
+Branch: `m2-usher-server` (dari `main`).
+
+### Yang selesai
+
+- **Penerima Tamu (dashboard):**
+  - Kode Acara besar dengan tombol salin dan catatan "tidak rahasia".
+  - Tambah, ubah, nonaktifkan, dan hapus usher. Mode Check-In/Check-Out.
+  - **Dialog PIN** `AB-XXXX-XXXX`: tampil sekali, tidak bisa ditutup (Esc maupun X) sebelum "Saya sudah mencatat PIN" dicentang.
+  - Reset PIN (ID usher tetap, PIN lama langsung tidak berlaku).
+  - **QR Login** dengan hitung mundur 5 menit; QR baru membatalkan QR lama.
+  - **Daftar perangkat minimal:** kode, usher, nama/versi, masuk, terakhir terlihat, selisih jam > 2 menit, sesi berakhir, status, jumlah karantina.
+  - **Cabut** dan **Cabut & putus total** (alasan wajib, lewat Edge Function).
+  - **Banner peringatan:** blokir PIN beserta sisa waktunya dan saran QR Login, kegagalan per acara, dan batas karantina per perangkat.
+- **Pengaturan check-in:** Tampilkan Verifikasi Tamu, baris terkunci "Verifikasi VIP & VVIP: selalu aktif", Tamu Check-In Lebih 1 Kali, dan Print Tiket (informasi, kategori, 1–3 salinan) dengan pratinjau tiket.
+- **Pop-up sapaan:** editor per kategori, variabel `{{nama}}`/`{{kategori}}` (variabel salah ditolak), tiga tampilan, unggah foto ke bucket privat (jenis dicek dari isi berkas), dan pratinjau seukuran HP.
+- **Edge Function `usher-login`:**
+  - Selector + verifier dengan tepat satu bcrypt per percobaan (dummy bila usher tidak ditemukan atau nonaktif).
+  - 401 identik untuk semua penyebab, minimal 500 ms.
+  - Blokir (IP + Kode Acara) 10/15 menit dan per IP 50/15 menit, keduanya sebelum bcrypt; peringatan per acara 20/15 menit tanpa mengunci.
+  - QR Login bebas blokir.
+  - User Auth perangkat dengan klaim di `app_metadata`; pendaftaran dibatalkan bila sesi gagal dibuat.
+- **Edge Function `device-cleanup`:**
+  - Mode terminate memakai JWT Admin; keanggotaan dan audit diperiksa DB.
+  - Mode sweep memakai secret job dari Vault.
+  - `auth.admin.deleteUser` saja (tidak ada SQL ke `auth.users`), idempoten.
+  - Job `pg_cron` tiap 15 menit lewat `pg_net`.
+- **RPC usher:**
+  - `pull_snapshot`: 14 kunci GuestSnapshot persis, paginasi keyset, delta + tombstone. `revoked`/`expired` tanpa data, termasuk saat kursor dikirim.
+  - `push_outbox`: semua cabang 12.3, idempoten, galat per item, karantina dua alasan + batas 500, dan penolakan seluruh batch.
+  - Keduanya memeriksa ulang `devices` dan `events` di setiap panggilan.
+- **Realtime:** Broadcast privat `event:{id}:usher` dari trigger DB, satu sinyal per transaksi, hanya untuk perangkat sah. Postgres Changes tidak dipakai.
+- **Simulator** `pnpm sim`: 14 langkah plan bagian 17, `--scenario quarantine-limit`, dan mode `--live`.
+
+### FR dan bukti tes
+
+| FR | Bukti |
+|---|---|
+| R-01 Tambah Penerima Tamu (Check-In/Check-Out) | pgTAP `072`, `090` (Check-Out → `mode_mismatch`); E2E `ushers.spec` |
+| R-02 Kode Acara + PIN, QR Login, reset, nonaktif | pgTAP `070`, `072`; integrasi `usher-login`; E2E `ushers.spec`; simulator langkah 2 |
+| R-03 Pengaturan proses check-in | pgTAP `072` (validasi DB), `090` (Lebih 1 Kali → repeat/duplicate); E2E `settings-greeting.spec` |
+| R-04 Print Tiket Penomoran | pgTAP `072`; unit `m2-usher`; E2E `settings-greeting.spec` |
+| R-06 Perubahan langsung berlaku di app | pgTAP `120` (trigger → sinyal, satu per transaksi; perangkat menarik lewat delta, `080`) |
+| R-08 Cabut / putus total, karantina, batas 500, daftar perangkat | pgTAP `072`, `080`, `090`, `095`; integrasi `device-cleanup`; E2E `ushers.spec`; simulator 11–13 |
+| R-09 Rate limit login | pgTAP `070`; integrasi `usher-login`; E2E banner blokir |
+| R-10 Sesi berakhir, masa tenggang, arsip | pgTAP `070` (`session_ended`), `080`, `090`, `095` |
+| C-06 Nomor tiket otomatis / kode perangkat | pgTAP `070` (A..ZZ, 702), `090` (`ticket_device_mismatch`); integrasi paritas kode perangkat |
+| C-08 Check-in ulang memakai nomor yang sama | pgTAP `090` (repeat dengan VVIP-008); simulator langkah 7 |
+| P-01 Pop-up sapaan + foto | pgTAP `072`, `125`; unit; E2E `settings-greeting.spec` |
+| P-02 Variabel sapaan | unit `m2-usher`; E2E `settings-greeting.spec` |
+| HM-01 Snapshot minimal | pgTAP `080`; integrasi `usher-login` (skema `.strict()`); simulator langkah 3 |
+
+### Kriteria keamanan `prd.md` §16 yang bertambah buktinya
+
+| Kriteria | Bukti |
+|---|---|
+| Usher hanya lewat `pull_snapshot`/`push_outbox`; JWT usher asli tidak bisa membaca tabel | pgTAP `030`, `090` (usher membaca `check_ins` = 0 baris); integrasi `usher-login` |
+| Login PIN: tepat satu bcrypt, respons identik, blokir sebelum bcrypt | pgTAP `070` (pembungkus `verify_secret` dihitung); integrasi (401 identik, ≥ 500 ms, sebaran < 250 ms) |
+| Perangkat dicabut tidak menerima data apa pun | pgTAP `080`, `120` |
+| Putus total: user Auth dihapus lewat Admin API, refresh gagal, push ditolak | integrasi `device-cleanup`; simulator langkah 13 |
+| Job terjadwal memakai secret Vault, bukan service role | pgTAP `095`; integrasi (pg_cron → pg_net → fungsi sungguhan) |
+| `pull_snapshot` tanpa telepon, catatan, token QR mentah | pgTAP `080`; skema `.strict()` di integrasi dan simulator |
+| Bucket privat, tanpa SVG, hanya Admin acara | pgTAP `125`; E2E (SVG menyamar ditolak) |
+
+### Hasil tes
+
+| Rangkaian | Hasil |
+|---|---|
+| `pnpm lint`, `pnpm typecheck`, `svelte-check` | bersih |
+| `pnpm test:unit` (shared, repo, dashboard) | 76 lulus |
+| `node scripts/gen-db-types.mjs --check` | tipe DB sesuai skema |
+| `pnpm db:test` (pgTAP) | 352 lulus (19 file) |
+| `pnpm test:integration` | 61 lulus |
+| `pnpm sim -- --scenario quarantine-limit` | 23/23 pemeriksaan sesuai |
+| `pnpm test:e2e` (Playwright + axe) | 42 lulus |
+| `pnpm secrets:scan` | tidak ada kebocoran |
+
+**Uji mutasi:**
+- penghitung gagal login dikosongkan → `070` gagal 14 tes;
+- policy Realtime dibuat selalu boleh → `120` gagal 5;
+- guard tingkat pencabutan dimatikan → `095` gagal 4.
+
+Setelah `db:reset`, semua kembali lulus.
+
+### Ditunda (dengan alasan)
+
+| Item | Alasan |
+|---|---|
+| Setujui/tolak karantina, tinjau ganda/bentrok (FR-RW-05), dan bagian keputusan di langkah 11 simulator | M3 bersama Riwayat dan `admin_decide_quarantine` |
+| Topik Realtime `event:{id}:stats` | M3 bersama statistik |
+| Cara perangkat mengambil foto sapaan (Q11) | Diputuskan bersama App Penerima Tamu; snapshot sudah mengirim `photoPath` dan `photoVersion` |
+| Verifikasi header IP klien di Supabase produksi (T-051) | M6, butuh project produksi |
+| Kolom FR-R-07 lainnya (antrean belum tersinkron) | P1 |
+
+### Penyiapan produksi (untuk operator, sekali per project)
+
+1. **Secret Edge Function** (Dashboard → Edge Functions → Secrets):
+   - `DEVICE_CLEANUP_CRON_SECRET`: acak ≥ 32 karakter;
+   - `USHER_APP_ORIGINS`: origin App Penerima Tamu;
+   - `DASHBOARD_ORIGINS`: origin dashboard Cloudflare Pages.
+2. **Vault** (SQL editor):
+   - `select vault.create_secret('https://<ref>.supabase.co/functions/v1/device-cleanup', 'device_cleanup_url');`
+   - `select vault.create_secret('<secret yang sama>', 'device_cleanup_cron_secret');`
+3. **Auth → Rate limits:** login perangkat (lewat `usher-login`) ikut dihitung batas sign-in per IP Edge Function. Naikkan sesuai jumlah perangkat per acara.
+
+### Cara menguji secara lokal
+
+Setelah menarik perubahan, Supabase perlu dihidupkan ulang sekali. Edge Function dan secret lokalnya baru terbaca saat start.
+
+```powershell
+pnpm install
+pnpm db:stop
+pnpm db:start                   # membuat supabase/functions/.env (secret lokal acak) dan mengisi Vault
+pnpm db:reset
+
+pnpm lint; pnpm typecheck; pnpm test:unit
+pnpm db:test
+pnpm test:integration
+pnpm sim -- --scenario quarantine-limit
+pnpm --filter @guestbook/dashboard test:e2e
+```
+
+Mencoba manual (`pnpm --filter @guestbook/dashboard dev`, masuk sebagai `admin@buku-tamu.test` / `admin-lokal-2026`):
+
+1. Buka acara → **Penerima Tamu** → **Tambah penerima tamu**. Catat PIN (dialog tidak bisa ditutup sebelum dicentang).
+2. Jalankan `pnpm sim -- --live --rate 1 --duration 60 --event <id acara>`. Dua perangkat login lalu mengirim check-in; muat ulang halaman untuk melihat perangkat A dan B.
+3. Klik **Cabut** pada perangkat A, lalu **Cabut & putus total** pada B (alasan wajib). Simulator yang masih berjalan akan menerima `revoked`/`rejected`.
+4. **QR Login** pada salah satu usher: QR beserta hitung mundur 5 menit.
+5. **Pengaturan check-in** dan **Sapaan**: ubah, lihat pratinjaunya, lalu simpan.
+6. Jejak audit ada di Supabase Studio (http://127.0.0.1:54323) → `audit_logs`.
+
+### Entri baru `docs/decisions.md`
+
+T-048 s.d. T-067 (ringkas):
+- salinan shared untuk Edge Function (T-048);
+- hash dummy dari migration (T-049);
+- percobaan diblokir tidak dihitung (T-050);
+- sumber IP klien (T-051);
+- 403 `session_ended` (T-052);
+- alokasi kode perangkat (T-053);
+- isi QR Login (T-054);
+- format kursor (T-055);
+- galat per item (T-056);
+- hitungan batas karantina (T-057);
+- validasi jsonb pengaturan/sapaan di DB (T-058);
+- sinyal Realtime (T-059);
+- penyimpanan foto (T-060);
+- secret lokal (T-061);
+- rate limit lokal (T-062);
+- banner blokir IP (T-063);
+- audit tambahan (T-064);
+- daftar teks di config (T-065);
+- tata letak daftar perangkat (T-066);
+- simulator (T-067).
+
+## M1 — Admin inti · selesai
 
 Branch: `m1-admin-inti` (dari `m0-fondasi`; belum di-merge ke `main`).
 

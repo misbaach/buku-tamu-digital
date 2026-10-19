@@ -45,8 +45,11 @@ jobs:
           pnpm typecheck
           pnpm test:unit
 
-      - name: Supabase lokal
-        run: pnpm exec supabase start -x studio,mailpit,imgproxy,logflare,vector,supavisor
+      - name: Supabase lokal (secret job device-cleanup dibuat acak per run, tidak pernah di repo)
+        run: |
+          node scripts/local-secrets.mjs --env
+          pnpm exec supabase start -x studio,mailpit,imgproxy,logflare,vector,supavisor
+          node scripts/local-secrets.mjs --vault
 
       - name: Tipe DB tidak basi
         run: node scripts/gen-db-types.mjs --check
@@ -56,6 +59,9 @@ jobs:
 
       - name: Tes integrasi
         run: pnpm test:integration
+
+      - name: Simulator check-in (14 langkah + batas karantina)
+        run: pnpm sim -- --scenario quarantine-limit
 
       - name: Dashboard (svelte-check + Playwright)
         working-directory: apps/dashboard

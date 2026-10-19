@@ -11,6 +11,8 @@
     { path: `/acara/${data.event.id}/tamu`, label: 'Tamu' },
     { path: `/acara/${data.event.id}/grup`, label: 'Grup' },
     { path: `/acara/${data.event.id}/nomor-urut`, label: 'Nomor Urut' },
+    { path: `/acara/${data.event.id}/penerima-tamu`, label: 'Penerima Tamu' },
+    { path: `/acara/${data.event.id}/sapaan`, label: 'Sapaan' },
     { path: `/acara/${data.event.id}/pengaturan`, label: 'Pengaturan' },
   ] as const);
 </script>

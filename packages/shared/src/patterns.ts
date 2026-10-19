@@ -1,6 +1,7 @@
 import {
   CODE_ALPHABET,
   EVENT_CODE_LENGTH,
+  MAX_DEVICE_CODES,
   PIN_SECRET_LENGTH,
   SPECIAL_NUMBER_MAX_LENGTH,
   USHER_SELECTOR_LENGTH,
@@ -74,4 +75,28 @@ export function parsePin(raw: string): ParsedPin | null {
 /** Bentuk tampilan `AB-XXXX-XXXX`. */
 export function formatPin(selector: string, secret: string): string {
   return `${selector}-${secret.slice(0, 4)}-${secret.slice(4)}`;
+}
+
+// --- Kode perangkat (FR-C-06, 12.3 poin 3) ------------------------------------------------------
+
+/** Kode perangkat urutan ke-`index` (mulai 0): A..Z, lalu AA..ZZ. Sama dengan private.device_code() di DB. */
+export function deviceCode(index: number): string {
+  if (!Number.isInteger(index) || index < 0 || index >= MAX_DEVICE_CODES) {
+    throw new RangeError(`Indeks kode perangkat harus 0..${MAX_DEVICE_CODES - 1}.`);
+  }
+  if (index < 26) return String.fromCharCode(65 + index);
+  const i = index - 26;
+  return String.fromCharCode(65 + Math.floor(i / 26), 65 + (i % 26));
+}
+
+/** Kebalikan deviceCode(); `null` bila bukan kode perangkat. */
+export function deviceCodeIndex(code: string): number | null {
+  if (!/^[A-Z]{1,2}$/.test(code)) return null;
+  if (code.length === 1) return code.charCodeAt(0) - 65;
+  return 26 + (code.charCodeAt(0) - 65) * 26 + (code.charCodeAt(1) - 65);
+}
+
+/** Kode perangkat pada nomor tiket otomatis (`B-017` → `B`); `null` bila bukan nomor otomatis. */
+export function ticketDeviceCode(ticket: string): string | null {
+  return DEVICE_TICKET_PATTERN.test(ticket) ? ticket.slice(0, ticket.indexOf('-')) : null;
 }

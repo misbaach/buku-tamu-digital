@@ -4,7 +4,7 @@
 |---|---|
 | Acuan | `prd.md` **v0.5** (sumber kebenaran) |
 | Lingkup sesi | M0, M1, M2 (sisi server + dashboard), M3, simulator check-in |
-| Status | **M0 dan M1 selesai** (lihat `docs/progress.md`); menunggu konfirmasi sebelum M2. |
+| Status | **M0, M1, dan M2 selesai** (lihat `docs/progress.md`); menunggu konfirmasi sebelum M3. |
 | Tanggal | 18 Oktober 2026 |
 
 Semua keputusan yang mengubah perilaku ada di `prd.md` v0.5. Dokumen ini hanya berisi cara mengerjakannya: urutan kerja, struktur teknis, arah UI/UX, dan bukti test.

@@ -113,7 +113,8 @@
   onconfirm={archive}
 >
   <p>
-    Pastikan semua perangkat usher sudah tersinkron. Setelah diarsipkan, check-in yang belum terkirim dari perangkat
-    akan ditolak. Tindakan ini tercatat di audit log dan tidak bisa dibatalkan dari dashboard.
+    Setelah diarsipkan, perangkat usher tidak bisa mengirim data lagi. Data yang belum terkirim hanya bisa masuk lewat
+    file ekspor. Pastikan semua perangkat sudah tersinkron. Tindakan ini tercatat di audit log dan tidak bisa dibatalkan
+    dari dashboard.
   </p>
 </ConfirmDialog>

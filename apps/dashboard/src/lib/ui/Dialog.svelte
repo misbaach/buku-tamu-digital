@@ -9,11 +9,22 @@
     description?: string;
     size?: 'sm' | 'md' | 'lg' | 'xl';
     onclose?: () => void;
+    /** false: tidak bisa ditutup lewat Esc atau tombol X (mis. PIN yang harus dicatat dulu). */
+    dismissible?: boolean;
     children: Snippet;
     footer?: Snippet;
   }
 
-  let { open = $bindable(false), title, description, size = 'md', onclose, children, footer }: Props = $props();
+  let {
+    open = $bindable(false),
+    title,
+    description,
+    size = 'md',
+    onclose,
+    dismissible = true,
+    children,
+    footer,
+  }: Props = $props();
   const uid = $props.id();
   let el = $state<HTMLDialogElement>();
 
@@ -30,6 +41,9 @@
   bind:this={el}
   aria-labelledby="{uid}-title"
   aria-describedby={description ? `${uid}-desc` : undefined}
+  oncancel={(e) => {
+    if (!dismissible) e.preventDefault();
+  }}
   onclose={() => {
     open = false;
     onclose?.();
@@ -47,14 +61,14 @@
         <p id="{uid}-desc" class="mt-0.5 text-sm text-ink-muted">{description}</p>
       {/if}
     </div>
-    <button
-      type="button"
-      class="-mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-control text-ink-muted hover:bg-surface-2 hover:text-ink"
-      aria-label="Tutup"
-      onclick={() => (open = false)}
-    >
-      <X size={18} aria-hidden="true" />
-    </button>
+    {#if dismissible}<button
+        type="button"
+        class="-mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-control text-ink-muted hover:bg-surface-2 hover:text-ink"
+        aria-label="Tutup"
+        onclick={() => (open = false)}
+      >
+        <X size={18} aria-hidden="true" />
+      </button>{/if}
   </header>
   <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
     {@render children()}

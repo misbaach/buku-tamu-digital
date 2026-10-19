@@ -31,7 +31,7 @@ test('pengaturan: ubah nama, lalu arsipkan dengan konfirmasi', async ({ page }) 
 
   await page.getByRole('button', { name: 'Arsipkan acara…' }).click();
   const confirm = page.getByRole('dialog', { name: `Arsipkan ${newName}?` });
-  await expect(confirm).toContainText('check-in yang belum terkirim');
+  await expect(confirm).toContainText('perangkat usher tidak bisa mengirim data lagi');
   await confirm.getByRole('button', { name: 'Arsipkan acara' }).click();
   await expect(page.getByText('Acara ini sudah diarsipkan.')).toBeVisible();
   await page.goto('/');

@@ -6,3 +6,7 @@ export * from './patterns.ts';
 export * from './schemas/common.ts';
 export * from './schemas/guest.ts';
 export * from './schemas/event.ts';
+export * from './schemas/usher.ts';
+export * from './schemas/settings.ts';
+export * from './schemas/greeting.ts';
+export * from './sync.ts';

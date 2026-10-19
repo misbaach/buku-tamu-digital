@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { createEvent, uniqueName } from './api';
+import { createEvent, createUsher, eventCode, uniqueName, usherLogin } from './api';
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -68,6 +68,36 @@ test.describe('aksesibilitas halaman Admin (axe, WCAG 2.2 AA)', () => {
       ['grup', 'Grup tamu'],
       ['nomor-urut', 'Nomor Urut VIP & VVIP'],
       ['pengaturan', 'Pengaturan acara'],
+    ] as const) {
+      await page.goto(`/acara/${eventId}/${path}`);
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+      await expectNoViolations(page);
+    }
+  });
+
+  test('Penerima Tamu (dengan perangkat), dialog PIN dan QR Login, Pengaturan check-in, Sapaan', async ({ page }) => {
+    const usher = await createUsher(eventId, 'Usher Aksesibel');
+    await usherLogin(await eventCode(eventId), usher.pin);
+    await page.goto(`/acara/${eventId}/penerima-tamu`);
+    await expect(page.getByRole('heading', { name: 'Perangkat' })).toBeVisible();
+    await expectNoViolations(page);
+
+    await page.getByRole('button', { name: 'Tambah penerima tamu' }).first().click();
+    await page.getByLabel('Nama').fill('Usher Kedua');
+    await page.getByRole('button', { name: 'Tambah dan buat PIN' }).click();
+    await expect(page.getByRole('dialog', { name: 'PIN untuk Usher Kedua' })).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByLabel('Saya sudah mencatat PIN').check();
+    await page.getByRole('button', { name: 'Tutup' }).click();
+
+    await page.getByRole('button', { name: 'QR Login untuk Usher Aksesibel' }).click();
+    await expect(page.getByRole('img', { name: 'QR Login untuk Usher Aksesibel' })).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByRole('button', { name: 'Selesai' }).click();
+
+    for (const [path, heading] of [
+      ['penerima-tamu/pengaturan', 'Pengaturan check-in'],
+      ['sapaan', 'Pop-up sapaan'],
     ] as const) {
       await page.goto(`/acara/${eventId}/${path}`);
       await expect(page.getByRole('heading', { name: heading })).toBeVisible();

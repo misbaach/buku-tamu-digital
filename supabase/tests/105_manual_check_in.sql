@@ -1,5 +1,5 @@
 -- Tandai hadir manual oleh Admin (docs/plan.md 10.4, prd.md 12.3 poin 15).
--- Kasus 6 (statistik) dan 7 (bentuk checkIn di pull_snapshot) ditambahkan di M3 dan M2 bersama fungsinya.
+-- Kasus 7 (checkIn di pull_snapshot) diuji di 080_pull_snapshot; kasus 6 (statistik) ditambahkan di M3 bersama get_event_stats.
 begin;
 select plan(13);
 

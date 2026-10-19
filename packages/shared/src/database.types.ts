@@ -325,6 +325,15 @@ isOneToOne: false
 "admin_create_event":
 { Args: { "p_couple_names"?: string,"p_event_date": string,"p_name": string,"p_timezone"?: string,"p_venue"?: string }; Returns: string
                            },
+"admin_create_login_qr":
+{ Args: { "p_usher_id": string }; Returns: Json
+                           },
+"admin_create_usher":
+{ Args: { "p_event_id": string,"p_mode"?: Database["public"]['Enums']["usher_mode"],"p_name": string }; Returns: Json
+                           },
+"admin_delete_usher":
+{ Args: { "p_usher_id": string }; Returns: Json
+                           },
 "admin_import_guests":
 { Args: { "p_event_id": string,"p_rows": Json }; Returns: Json
                            },
@@ -334,11 +343,49 @@ isOneToOne: false
 "admin_preview_special_numbers":
 { Args: { "p_category": Database["public"]['Enums']["guest_category"],"p_event_id": string,"p_order": string,"p_overwrite"?: boolean }; Returns: Json
                            },
+"admin_reset_usher_pin":
+{ Args: { "p_usher_id": string }; Returns: Json
+                           },
+"admin_revoke_device":
+{ Args: { "p_device_id": string,"p_mode": Database["public"]['Enums']["revoke_mode"],"p_reason"?: string }; Returns: Json
+                           },
 "admin_update_check_in":
 { Args: { "p_check_in_id": string,"p_patch": Json,"p_reason"?: string }; Returns: Json
                            },
 "admin_update_event":
 { Args: { "p_event_id": string,"p_patch": Json }; Returns: undefined
+                           },
+"admin_update_usher":
+{ Args: { "p_patch": Json,"p_usher_id": string }; Returns: Json
+                           },
+"get_alerts":
+{ Args: { "p_event_id": string }; Returns: Json
+                           },
+"pull_snapshot":
+{ Args: { "p_client_now"?: string,"p_cursor"?: string,"p_limit"?: number }; Returns: Json
+                           },
+"push_outbox":
+{ Args: { "p_client_now"?: string,"p_items": Json }; Returns: Json
+                           },
+"svc_abort_device":
+{ Args: { "p_device_id": string }; Returns: undefined
+                           },
+"svc_attach_device_user":
+{ Args: { "p_auth_user_id": string,"p_device_id": string }; Returns: undefined
+                           },
+"svc_devices_due_for_cleanup":
+{ Args: { "p_limit"?: number }; Returns: {
+              "auth_user_id": string,"device_id": string
+            }[]
+                           },
+"svc_mark_auth_user_deleted":
+{ Args: { "p_device_id": string }; Returns: undefined
+                           },
+"svc_terminated_device_user":
+{ Args: { "p_device_id": string }; Returns: string
+                           },
+"svc_usher_login":
+{ Args: { "p_app_version"?: string,"p_device_name"?: string,"p_event_code"?: string,"p_ip": string,"p_method": Database["public"]['Enums']["login_method"],"p_secret"?: string,"p_selector"?: string,"p_token"?: string }; Returns: Json
                            }
           }
           Enums: {

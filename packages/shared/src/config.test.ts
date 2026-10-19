@@ -39,7 +39,10 @@ describe('config', () => {
     expect(invitationPath('abc_DEF-123')).toBe('/i/abc_DEF-123');
   });
 
-  it('konfigurasi yang dicerminkan ke DB hanya berisi nilai primitif', () => {
-    for (const v of Object.values(DB_MIRRORED_CONFIG)) expect(['string', 'number']).toContain(typeof v);
+  it('konfigurasi yang dicerminkan ke DB hanya berisi teks, angka, atau daftar teks', () => {
+    for (const v of Object.values(DB_MIRRORED_CONFIG)) {
+      if (Array.isArray(v)) expect(v.every((x) => typeof x === 'string')).toBe(true);
+      else expect(['string', 'number']).toContain(typeof v);
+    }
   });
 });

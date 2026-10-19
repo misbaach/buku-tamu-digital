@@ -1,6 +1,16 @@
 /** Label UI Bahasa Indonesia untuk enum (prd.md bagian 5, D15). */
-import type { AttendanceStatus, Category, CheckInStatus, QuarantineReason, RevokeMode, RsvpStatus } from './enums.ts';
+import type {
+  AttendanceStatus,
+  Category,
+  CheckInStatus,
+  QuarantineReason,
+  RevokeMode,
+  RsvpStatus,
+  UsherMode,
+} from './enums.ts';
 import { REVIEW_STATUSES, type ReviewStatus } from './enums.ts';
+import type { GreetingLayout } from './schemas/greeting.ts';
+import type { PrintTicketField } from './schemas/settings.ts';
 
 export const CATEGORY_LABEL: Record<Category, string> = {
   regular: 'Regular',
@@ -75,4 +85,48 @@ export const QUARANTINE_REASON_LABEL: Record<QuarantineReason, string> = {
 export const REVOKE_MODE_LABEL: Record<RevokeMode, string> = {
   quarantine: 'Cabut',
   terminate: 'Cabut & putus total',
+};
+
+export const USHER_MODE_LABEL: Record<UsherMode, string> = {
+  check_in: 'Check-In',
+  check_out: 'Check-Out',
+};
+
+/** Keadaan perangkat di daftar perangkat (FR-R-08). Urutannya sama dengan pemeriksaan server (11.5 langkah 5). */
+export type DeviceState = 'active' | 'revoked' | 'terminated' | 'expired';
+
+export const DEVICE_STATE_LABEL: Record<DeviceState, string> = {
+  active: 'Aktif',
+  revoked: 'Dicabut',
+  terminated: 'Diputus total',
+  expired: 'Sesi berakhir',
+};
+
+export function deviceState(
+  device: { revoke_mode: RevokeMode | null; session_expires_at: string },
+  eventArchived: boolean,
+  now: Date = new Date(),
+): DeviceState {
+  if (device.revoke_mode === 'terminate') return 'terminated';
+  if (device.revoke_mode === 'quarantine') return 'revoked';
+  if (eventArchived || new Date(device.session_expires_at) <= now) return 'expired';
+  return 'active';
+}
+
+export const PRINT_TICKET_FIELD_LABEL: Record<PrintTicketField, string> = {
+  event_name: 'Nama acara',
+  couple_names: 'Nama mempelai',
+  event_date: 'Tanggal acara',
+  guest_name: 'Nama tamu',
+  category: 'Kategori',
+  group_name: 'Grup',
+  ticket_number: 'Nomor tiket',
+  pax: 'Jumlah orang',
+  checked_in_at: 'Jam masuk',
+};
+
+export const GREETING_LAYOUT_LABEL: Record<GreetingLayout, string> = {
+  text: 'Teks saja',
+  photo_wide: 'Foto lebar',
+  photo_round: 'Foto bulat',
 };

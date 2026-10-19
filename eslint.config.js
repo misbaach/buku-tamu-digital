@@ -16,6 +16,7 @@ export default defineConfig(
       '**/playwright-report/',
       '.tools/',
       'packages/shared/src/database.types.ts',
+      'supabase/functions/_shared/shared/',
     ],
   },
   js.configs.recommended,

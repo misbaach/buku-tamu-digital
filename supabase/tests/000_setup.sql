@@ -95,6 +95,62 @@ begin
 end;
 $$;
 
+-- Usher dengan rahasia PIN yang diketahui tes (bcrypt lewat fungsi yang sama dengan produksi).
+create or replace function tests.create_usher(
+  p_event uuid, p_name text, p_selector text, p_secret text default 'ABCDEFGH',
+  p_mode public.usher_mode default 'check_in'
+)
+returns uuid
+language sql
+set search_path = ''
+as $$
+  insert into public.ushers (event_id, name, mode, pin_selector, pin_hash)
+  values (p_event, p_name, p_mode, p_selector, private.hash_secret(p_secret))
+  returning id;
+$$;
+
+-- Perangkat terdaftar beserta user Auth-nya, persis seperti hasil usher-login (app_metadata ditulis server).
+create or replace function tests.create_device(
+  p_event uuid, p_usher uuid, p_code text, p_expires timestamptz default now() + interval '1 day'
+)
+returns uuid
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_device uuid := gen_random_uuid();
+  v_user uuid;
+begin
+  insert into public.devices (id, event_id, usher_id, code, session_expires_at)
+  values (v_device, p_event, p_usher, p_code, p_expires);
+  v_user := tests.create_user(v_device || '@device.test', jsonb_build_object(
+    'role', 'usher', 'event_id', p_event, 'usher_id', p_usher, 'device_id', v_device));
+  update public.devices set auth_user_id = v_user where id = v_device;
+  return v_device;
+end;
+$$;
+
+create or replace function tests.authenticate_as_device(p_device uuid)
+returns void
+language sql
+set search_path = ''
+as $$
+  select tests.authenticate_as((select auth_user_id from public.devices where id = p_device));
+$$;
+
+-- Item outbox minimal untuk push_outbox.
+create or replace function tests.push_item(
+  p_id uuid, p_device uuid, p_guest uuid, p_ticket text, p_pax integer default 1
+)
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_build_object('id', p_id, 'guestId', p_guest, 'actualPax', p_pax, 'ticketNumber', p_ticket,
+                            'deviceId', p_device, 'checkedInAt', '2026-10-18T19:00:00+07:00');
+$$;
+
 select plan(1);
 select pass('helper tes tersedia');
 select * from finish();
