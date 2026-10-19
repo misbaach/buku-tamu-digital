@@ -1,6 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { createEvent, createUsher, eventCode, uniqueName, usherLogin } from './api';
+import {
+  createEvent,
+  createUsher,
+  eventCode,
+  guestIds,
+  loginDevice,
+  pushCheckIns,
+  uniqueName,
+  usherLogin,
+} from './api';
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -103,5 +112,25 @@ test.describe('aksesibilitas halaman Admin (axe, WCAG 2.2 AA)', () => {
       await expect(page.getByRole('heading', { name: heading })).toBeVisible();
       await expectNoViolations(page);
     }
+  });
+
+  test('Statistik (dengan grafik) dan Riwayat (dengan baris perlu ditinjau)', async ({ page }) => {
+    const ids = await guestIds(eventId);
+    const code = await eventCode(eventId);
+    const d1 = await loginDevice(code, (await createUsher(eventId, 'Usher Grafik 1')).pin);
+    const d2 = await loginDevice(code, (await createUsher(eventId, 'Usher Grafik 2')).pin);
+    await pushCheckIns(d1, [{ guestId: ids['Raja Uji']!, ticket: 'VVIP-001', pax: 2 }]);
+    await pushCheckIns(d2, [{ guestId: ids['Raja Uji']!, ticket: 'VVIP-001' }]);
+
+    await page.goto(`/acara/${eventId}/statistik`);
+    await expect(page.getByRole('heading', { name: 'Statistik' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Kedatangan per/ })).toBeVisible();
+    await expectNoViolations(page);
+    await page.getByRole('button', { name: 'Tampilkan sebagai tabel' }).click();
+    await expectNoViolations(page);
+
+    await page.goto(`/acara/${eventId}/riwayat?status=tinjau`);
+    await expect(page.getByText('Ganda — tinjau')).toBeVisible();
+    await expectNoViolations(page);
   });
 });

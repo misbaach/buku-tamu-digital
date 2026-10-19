@@ -8,7 +8,9 @@
   let { data, children } = $props();
 
   const links = $derived([
+    { path: `/acara/${data.event.id}/statistik`, label: 'Statistik' },
     { path: `/acara/${data.event.id}/tamu`, label: 'Tamu' },
+    { path: `/acara/${data.event.id}/riwayat`, label: 'Riwayat' },
     { path: `/acara/${data.event.id}/grup`, label: 'Grup' },
     { path: `/acara/${data.event.id}/nomor-urut`, label: 'Nomor Urut' },
     { path: `/acara/${data.event.id}/penerima-tamu`, label: 'Penerima Tamu' },

@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { parseArgs } from 'node:util';
 import {
   GUEST_SNAPSHOT_KEYS,
+  QUARANTINE_MAX_ITEMS_PER_DEVICE,
   pullResponseSchema,
   pushResponseSchema,
   type PushItem,
@@ -349,11 +350,53 @@ async function scenario() {
         ),
     'tamu tambahan belum dibuat, kehadiran tidak berubah',
   );
-  console.log('    (Setujui/tolak karantina: RPC admin_decide_quarantine dibangun di M3.)');
+  // Admin menyetujui sebagian dan menolak sebagian (FR-RW-05).
+  const statsBefore = (await rpc(admin, 'get_event_stats', { p_event_id: ev.eventId })).data as {
+    peoplePresent: number;
+  };
+  const [qVvip, qNew] = qB.results;
+  const approved = await rpc(admin, 'admin_decide_quarantine', {
+    p_event_id: ev.eventId,
+    p_decision: 'approve',
+    p_ids: [qVvip!.id],
+  });
+  const rejected = await rpc(admin, 'admin_decide_quarantine', {
+    p_event_id: ev.eventId,
+    p_decision: 'reject',
+    p_ids: [qNew!.id],
+    p_reason: 'Simulasi: tamu tidak dikenal',
+  });
+  const statsAfter = (await rpc(admin, 'get_event_stats', { p_event_id: ev.eventId })).data as {
+    peoplePresent: number;
+  };
+  const vvip5After = await http(`/rest/v1/guests?id=eq.${byName('Tamu VVIP 005').id}&select=attendance_status`, {
+    method: 'GET',
+    token: admin,
+  });
+  check(
+    'setujui karantina',
+    (approved.data as { results: { status: string }[] }).results[0]?.status === 'accepted' &&
+      (vvip5After.data as { attendance_status: string }[])[0]?.attendance_status === 'checked_in' &&
+      statsAfter.peoplePresent === statsBefore.peoplePresent + 1,
+    'accepted, tamu Hadir, statistik +1 orang',
+  );
+  const stillNoGuest = await http(`/rest/v1/guests?select=id&name=eq.Tamu%20Karantina&event_id=eq.${ev.eventId}`, {
+    method: 'GET',
+    token: admin,
+  });
+  check(
+    'tolak karantina',
+    (rejected.data as { decided: number }).decided === 1 && (stillNoGuest.data as unknown[]).length === 0,
+    'tamu tambahan tidak dibuat, data tetap tersimpan',
+  );
 
   if (args.scenario === 'quarantine-limit') {
-    console.log('12. Batas karantina: B mengirim 501 item');
-    const many = Array.from({ length: 499 }, (_, i) => item(B, regular[i % 20]!.id, `B-${pad(i + 100)}`));
+    console.log('12. Batas karantina: B mengirim sampai item karantina ke-501');
+    // Karantina B yang tersisa: yang disetujui berpindah status, yang ditolak tetap terhitung (T-057).
+    const existing = qB.results.length - 1;
+    const many = Array.from({ length: QUARANTINE_MAX_ITEMS_PER_DEVICE + 1 - existing }, (_, i) =>
+      item(B, regular[i % 20]!.id, `B-${pad(i + 100)}`),
+    );
     let last: PushResponse | undefined;
     for (let i = 0; i < many.length; i += 200) last = await push(B, many.slice(i, i + 200));
     const lastCode = last?.results.at(-1);

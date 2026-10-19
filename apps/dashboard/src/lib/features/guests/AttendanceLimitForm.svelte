@@ -7,7 +7,11 @@
   import Button from '$lib/ui/Button.svelte';
 
   // FR-S-01: batas opsional; kosong = total jumlah undangan (D14).
-  let { eventId, limit }: { eventId: string; limit: number | null } = $props();
+  let {
+    eventId,
+    limit,
+    invitedTotal = null,
+  }: { eventId: string; limit: number | null; invitedTotal?: number | null } = $props();
   // Nilai awal saja; setelah disimpan, nilai di input sudah sama dengan prop.
   // svelte-ignore state_referenced_locally
   let value = $state(limit == null ? '' : String(limit));
@@ -59,7 +63,9 @@
   </span>
   <Button type="submit" variant="secondary" size="sm" {busy}>Simpan</Button>
   <p id="attendance-limit-hint" class="text-sm text-ink-muted">
-    Dipakai untuk peringatan di Statistik. Kosongkan untuk memakai total jumlah undangan.
+    Dipakai untuk peringatan di Statistik. Kosongkan untuk memakai total undangan{invitedTotal !== null
+      ? ` (${invitedTotal.toLocaleString('id-ID')} orang)`
+      : ''}.
   </p>
   {#if error}<p id="attendance-limit-error" class="w-full text-sm text-danger">{error}</p>{/if}
 </form>

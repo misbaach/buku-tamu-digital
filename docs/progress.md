@@ -1,6 +1,114 @@
 # Progres
 
-## M2 — Usher: sisi server dan dashboard · selesai, menunggu konfirmasi
+## M3 — Statistik dan Riwayat · selesai, menunggu konfirmasi
+
+Branch: `m3-statistik-riwayat` (dari `m2-usher-server`).
+
+### Yang selesai
+
+- **Statistik** (`/acara/[id]/statistik`):
+  - Orang hadir "X dari Y orang Akan hadir" dengan meter terhadap batas jumlah hadir. Teksnya menyebut sumber batas (diatur manual / total undangan).
+  - Peringatan overcapacity (`role="alert"`).
+  - Kartu: tamu undangan masuk, sudah check-out, tamu tambahan, orang di luar jumlah tercatat.
+  - Tabel per kategori dan grafik linimasa kedatangan per 15 menit (dengan tampilan tabel).
+  - Baris "Perlu ditinjau: 1 karantina · 1 ganda" yang menautkan ke Riwayat.
+  - **Pembaruan langsung:** Broadcast privat `event:{id}:stats` → debounce 1 detik → RPC agregat. Indikator Langsung / Diperbarui tiap 10 detik; polling otomatis bila Realtime tidak tersedia.
+- **Riwayat** (`/acara/[id]/riwayat`):
+  - Tab Check-In / Check-Out / Semua, chip Perlu ditinjau (n) / Karantina / Ganda / Nomor bentrok / Dibatalkan, dan pencarian nama. Semua tersimpan di URL, dengan paginasi server.
+  - Penanda RSVP vs kehadiran aktual dan sorotan "Lebih N dari tercatat".
+  - Nomor kosong tampil "—" dengan keterangan "Ditandai hadir oleh Admin, tanpa tiket". Penanda tamu tambahan dan tamu yang sudah dihapus.
+  - **Undo** dengan alasan wajib, **check-out manual**, **tandai ditinjau**, dan **ubah nomor** (status bentrok dievaluasi ulang).
+  - **Karantina:** dikelompokkan per perangkat, Setujui / Tolak… per baris, serta Setujui semua / Tolak semua dari perangkat.
+  - Ketiga status "— tinjau" memakai badge yang identik.
+- **RPC:**
+  - `get_event_stats`, `get_arrival_timeline`;
+  - `admin_void_check_in`, `admin_review_check_in`;
+  - `admin_decide_quarantine`: evaluasi ulang 12.3 pada saat disetujui, tamu tambahan baru dibuat saat itu, `received_at` dan alasan karantina tetap sebagai jejak. Semua diaudit.
+- **Pelengkap milestone sebelumnya:**
+  - Langkah 11 simulator (setujui dan tolak karantina; statistik +1 orang).
+  - Kasus 6 tes `105` (tandai hadir manual tanpa nomor dihitung di statistik).
+  - Angka total undangan di isian batas jumlah hadir.
+
+### FR dan bukti tes
+
+| FR | Bukti |
+|---|---|
+| S-01 Kehadiran seluruh tamu + batas | pgTAP `110` (definisi orang, batas manual vs total undangan); E2E `stats.spec` (peringatan menyebut sumber batas) |
+| S-02 Per kategori | pgTAP `110`; E2E `stats.spec` |
+| S-03 Tamu check-in + linimasa | pgTAP `110` (termasuk linimasa); E2E (grafik + tabel, axe) |
+| S-04 Check-out | pgTAP `110`; E2E `history.spec` (tab Check-Out) |
+| S-05 Tamu tambahan / di luar tercatat | pgTAP `110`; E2E `stats.spec` |
+| S-07 Realtime + polling | pgTAP `121`; E2E `stats.spec`: berubah ≤ 3 detik (terukur **1,37–1,55 detik**), polling saat WebSocket diblokir, dan tidak ada muat ulang saat data tidak berubah |
+| RW-01 Tab | E2E `history.spec` |
+| RW-02 RSVP vs aktual, overcapacity | E2E `history.spec` ("Lebih 1 dari tercatat") |
+| RW-03 Undo dengan alasan | pgTAP `115`; E2E `history.spec` |
+| RW-04 Check-out manual | pgTAP `100`; E2E `history.spec` |
+| RW-05 Tinjauan, setujui/tolak karantina per baris dan per perangkat | pgTAP `115`; E2E `history.spec` (badge identik untuk tiga status); simulator langkah 11 |
+
+### Hasil tes
+
+| Rangkaian | Hasil |
+|---|---|
+| `pnpm lint`, `pnpm typecheck`, `svelte-check` | bersih |
+| `pnpm test:unit` | 76 lulus |
+| `node scripts/gen-db-types.mjs --check` | tipe DB sesuai skema |
+| `pnpm db:test` (pgTAP) | 410 lulus (22 file), juga saat DB berisi data sisa simulator |
+| `pnpm test:integration` | 61 lulus |
+| `pnpm sim -- --scenario quarantine-limit` | 25/25 pemeriksaan sesuai |
+| `pnpm test:e2e` (Playwright + axe) | 50 lulus |
+| `pnpm secrets:scan` | tidak ada kebocoran |
+
+**Uji mutasi:**
+- statistik ikut menghitung `repeat` → `110` gagal 3;
+- policy Realtime statistik dibuka → `121` gagal 2 dan `120` gagal 5 (topik usher ikut terbuka).
+
+Setelah `db:reset`, semua kembali lulus.
+
+### Temuan selama M3
+
+1. **Loop muat ulang di halaman Statistik.** Efek Realtime bergantung pada objek `data`, jadi setiap muat ulang menyambung ulang channel dan memicu muat ulang lagi tanpa henti. Masalah ini terlihat karena latensi terukur lebih kecil dari debounce. Sudah diperbaiki (T-074) dan ada tes regresinya.
+2. **Tes `115` bergantung pada data sisa.** Hitungan audit global ikut membaca data simulator/E2E yang tersisa di DB lokal. Hitungannya sekarang dibatasi ke acara tes (T-077).
+
+### Ditunda (dengan alasan)
+
+| Item | Alasan |
+|---|---|
+| Statistik per grup (FR-S-06) | P1 |
+| Unggah outbox darurat di dashboard (FR-HM-08) | Di luar lingkup sesi (plan bagian 18) |
+
+### Cara menguji secara lokal
+
+```powershell
+pnpm install
+pnpm db:reset
+pnpm db:test; pnpm test:integration
+pnpm sim -- --scenario quarantine-limit
+pnpm --filter @guestbook/dashboard test:e2e
+```
+
+Mencoba manual (`pnpm --filter @guestbook/dashboard dev`):
+
+1. Buka acara → **Statistik**, lalu jalankan di terminal lain `pnpm sim -- --live --rate 1 --duration 120 --event <id acara>`. Angka dan grafik berubah sekitar 1–2 detik setelah setiap check-in, dan indikator menunjukkan **Langsung**.
+2. Jalankan `pnpm sim` (skenario lengkap). Buka acara "Simulasi …" yang dibuatnya → **Riwayat** → chip **Perlu ditinjau** untuk melihat Ganda, Nomor bentrok, dan Karantina dengan penanda yang sama.
+3. Coba **Setujui** / **Tolak…** (alasan wajib), **Setujui semua dari B**, **Tandai ditinjau**, **Ubah nomor…**, **Tandai keluar**, dan **Batalkan…**.
+4. Untuk melihat polling: hentikan layanan Realtime (`docker stop supabase_realtime_buku-tamu-digital`). Indikator berubah menjadi "Diperbarui tiap 10 detik". Hidupkan lagi dengan `docker start supabase_realtime_buku-tamu-digital`.
+
+### Entri baru `docs/decisions.md`
+
+T-068 s.d. T-078:
+- definisi statistik (T-068);
+- linimasa memakai jam perangkat (T-069);
+- persetujuan karantina tidak menandai ditinjau (T-070);
+- signature `admin_decide_quarantine` (T-071);
+- undo hanya untuk non-karantina (T-072);
+- sinyal statistik (T-073);
+- efek Realtime bergantung pada id (T-074);
+- grafik tanpa library dan tanpa style inline (T-075);
+- Riwayat berbasis URL (T-076);
+- isolasi tes audit (T-077);
+- urutan tab (T-078).
+
+## M2 — Usher: sisi server dan dashboard · selesai
 
 Branch: `m2-usher-server` (dari `main`).
 

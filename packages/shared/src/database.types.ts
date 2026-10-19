@@ -331,6 +331,9 @@ isOneToOne: false
 "admin_create_usher":
 { Args: { "p_event_id": string,"p_mode"?: Database["public"]['Enums']["usher_mode"],"p_name": string }; Returns: Json
                            },
+"admin_decide_quarantine":
+{ Args: { "p_decision": string,"p_device_id"?: string,"p_event_id": string,"p_ids"?: (string)[],"p_reason"?: string }; Returns: Json
+                           },
 "admin_delete_usher":
 { Args: { "p_usher_id": string }; Returns: Json
                            },
@@ -346,6 +349,9 @@ isOneToOne: false
 "admin_reset_usher_pin":
 { Args: { "p_usher_id": string }; Returns: Json
                            },
+"admin_review_check_in":
+{ Args: { "p_check_in_id": string }; Returns: Json
+                           },
 "admin_revoke_device":
 { Args: { "p_device_id": string,"p_mode": Database["public"]['Enums']["revoke_mode"],"p_reason"?: string }; Returns: Json
                            },
@@ -358,7 +364,18 @@ isOneToOne: false
 "admin_update_usher":
 { Args: { "p_patch": Json,"p_usher_id": string }; Returns: Json
                            },
+"admin_void_check_in":
+{ Args: { "p_check_in_id": string,"p_reason": string }; Returns: Json
+                           },
 "get_alerts":
+{ Args: { "p_event_id": string }; Returns: Json
+                           },
+"get_arrival_timeline":
+{ Args: { "p_bucket_min"?: number,"p_event_id": string }; Returns: {
+              "bucket_start": string,"guests": number,"people": number
+            }[]
+                           },
+"get_event_stats":
 { Args: { "p_event_id": string }; Returns: Json
                            },
 "pull_snapshot":

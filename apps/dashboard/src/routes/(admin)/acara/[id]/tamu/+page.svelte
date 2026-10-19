@@ -78,7 +78,9 @@
 </div>
 
 <div class="mt-5 rounded-dialog border border-line bg-surface px-4 py-2.5">
-  <AttendanceLimitForm eventId={data.event.id} limit={data.event.attendance_limit} />
+  {#await data.invitedTotal then invitedTotal}
+    <AttendanceLimitForm eventId={data.event.id} limit={data.event.attendance_limit} {invitedTotal} />
+  {/await}
 </div>
 
 <form role="search" class="mt-5 flex flex-wrap items-end gap-3" onsubmit={(e) => e.preventDefault()}>

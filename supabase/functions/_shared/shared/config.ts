@@ -84,6 +84,8 @@ export const CLOCK_SKEW_WARN_MS = 120_000;
 
 export const STATS_DEBOUNCE_MS = 1000;
 export const STATS_POLL_FALLBACK_MS = 10_000;
+/** Lebar interval linimasa kedatangan, dalam menit. (Asumsi-teknis) */
+export const STATS_TIMELINE_BUCKET_MIN = 15;
 
 // --- Upload gambar (FR-E-08, dipakai foto pop-up sapaan) ----------------------------------------
 
