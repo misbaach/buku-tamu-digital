@@ -234,7 +234,7 @@ Untuk `usher-login`: `svc_usher_login(...)`, `svc_attach_device_user(...)`, `svc
 5. `svc_attach_device_user` → `signInWithPassword` → kembalikan sesi, kode perangkat, nama event, nama usher, mode, dan `sessionExpiresAt`.
 6. Bila langkah 4–5 gagal → `svc_abort_device`.
 
-Respons gagal kredensial **identik** (`401`, isi yang sama, waktu minimal `USHER_LOGIN_FAIL_MIN_MS`) untuk Kode Acara tidak ada, ID usher tidak ada, usher nonaktif, rahasia salah, maupun QR tidak valid. Respons berbeda hanya muncul **setelah** kredensial terbukti sah (`403` acara diarsipkan atau kapasitas kode penuh) atau saat blokir (`429`).
+Respons gagal kredensial **identik** (`401`, isi yang sama, waktu minimal `USHER_LOGIN_FAIL_MIN_MS`) untuk Kode Acara tidak ada, ID usher tidak ada, usher nonaktif, rahasia salah, maupun QR tidak valid. Respons berbeda hanya muncul **setelah** kredensial terbukti sah (`403` `event_archived`, `session_ended` bila jendela sesi acara sudah lewat, atau `device_capacity`; T-052) atau saat blokir (`429`).
 
 ## 10. Kontrak sinkronisasi
 
@@ -276,7 +276,7 @@ Paginasi keyset `(updated_at, id)`. Kursor = jam server dikurangi `SYNC_CURSOR_O
 | 0 | Bukan usher, atau perangkat tidak ditemukan | Exception `42501` |
 | 1 | Putus total (`terminated`); dicabut dan `session_expires_at` lewat, atau tidak dicabut dan masa tenggang 72 jam habis (`quarantine_window_closed`); event diarsipkan (`event_archived`); mode Check-Out (`mode_mismatch`) | `{ status: 'rejected', reason }`, tidak ada item yang disimpan |
 | 2 | **Per item:** `id` sudah ada | `stored` + status tersimpan (idempoten) |
-| 3 | Item tidak valid | `error` + `code` |
+| 3 | Item tidak valid | `error` + `code`: `invalid_item`, `id_conflict`, `device_mismatch`, `guest_not_found`, `invalid_new_guest`, `invalid_ticket_number`, `ticket_device_mismatch`, `gift_not_supported` (T-056) |
 | 4 | Dicabut (Cabut) sebelum `session_expires_at` → `device_revoked`, status top-level `revoked`; atau tidak dicabut, sesi habis, masih dalam masa tenggang → `session_expired`, status top-level `expired` | `quarantined` (`newGuest` → `pending_guest`). Item ke-501 per perangkat dan seterusnya → `error: quarantine_limit` + peringatan + audit (sekali per perangkat) |
 | 5 | Ada `newGuest` | Buat tamu `is_additional = true` |
 | 6 | Tamu punya `accepted` aktif | `repeat` / `duplicate` |
